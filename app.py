@@ -1,4 +1,4 @@
-!pip install pykrx
+pip install pykrx
 
 import FinanceDataReader as fdr
 import pandas as pd
