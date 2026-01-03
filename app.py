@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from statsmodels.tsa.stattools import coint
 import matplotlib.pyplot as plt
-import koreanize_matplotlib
+#import koreanize_matplotlib
 import warnings
 import time
 
