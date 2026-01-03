@@ -1,5 +1,3 @@
-
-
 import FinanceDataReader as fdr
 import pandas as pd
 import numpy as np
