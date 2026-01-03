@@ -8,3 +8,4 @@ koreanize-matplotlib
 bs4
 requests
 plotly
+pykrx
