@@ -1,0 +1,10 @@
+streamlit
+finance-datareader
+pandas
+numpy
+statsmodels
+matplotlib
+koreanize-matplotlib
+bs4
+requests
+plotly
