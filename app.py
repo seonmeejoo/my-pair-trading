@@ -78,7 +78,7 @@ with st.sidebar:
     
     universe_mode = st.selectbox(
         "분석 대상 그룹",
-        ["KOSPI 200 (선물/헷지)", "시가총액 상위 100 (Long Only)"]
+        ["KOSPI 200 (선물/헷지)", "시가총액 상위 100 (Long Only)", "미국 대형주 (US Large Cap)"]
     )
     
     st.divider()
@@ -87,16 +87,20 @@ with st.sidebar:
 
     st.divider()
     
-    total_capital = st.number_input("투자 원금 (KRW)", value=10000000, step=1000000, format="%d")
-    
+    is_us_universe = "US" in universe_mode
+    currency_label = "USD" if is_us_universe else "KRW"
+    default_capital = 10000 if is_us_universe else 10000000
+    capital_step = 1000 if is_us_universe else 1000000
+    total_capital = st.number_input(f"투자 원금 ({currency_label})", value=default_capital, step=capital_step, format="%d")
+
     with st.expander("⚙️ 고급 설정 (민감도 조절)"):
         st.caption("익숙하지 않다면 기본값을 추천합니다.")
         window_size = st.slider("분석 기간 (Window)", 20, 120, 60)
         entry_z = st.slider("진입 기준 (Z-Score)", 1.5, 3.0, 2.0)
         exit_z = st.slider("익절 기준 (Z-Score)", 0.0, 1.0, 0.0)
         stop_loss_z = st.slider("손절 기준 (Z-Score)", 3.0, 6.0, 4.0)
-        
-        default_p = 0.05 if "상위 100" in universe_mode else 0.10
+
+        default_p = 0.05 if ("상위 100" in universe_mode or is_us_universe) else 0.10
         p_cutoff = st.slider("연관성 기준 (P-value)", 0.01, 0.20, default_p)
 
     st.divider()
@@ -150,7 +154,38 @@ def load_stock_data(universe_type, start_date, end_date):
         '000150.KS': '두산', '278280.KQ': '천보', '365550.KS': '성일하이텍'
     }
     
-    manual_tickers = {**tickers_massive, **additional} if "상위 100" in universe_type else tickers_futures
+    tickers_us = {
+        # Technology
+        'AAPL': 'Apple', 'MSFT': 'Microsoft', 'GOOGL': 'Alphabet', 'META': 'Meta',
+        'NVDA': 'NVIDIA', 'AMZN': 'Amazon', 'TSLA': 'Tesla', 'ORCL': 'Oracle',
+        'CRM': 'Salesforce', 'ADBE': 'Adobe', 'NFLX': 'Netflix', 'AMD': 'AMD',
+        'INTC': 'Intel', 'CSCO': 'Cisco', 'AVGO': 'Broadcom', 'QCOM': 'Qualcomm',
+        'TXN': 'Texas Instruments', 'AMAT': 'Applied Materials',
+        # Financials
+        'JPM': 'JPMorgan', 'BAC': 'Bank of America', 'WFC': 'Wells Fargo',
+        'GS': 'Goldman Sachs', 'MS': 'Morgan Stanley', 'BLK': 'BlackRock',
+        'V': 'Visa', 'MA': 'Mastercard', 'AXP': 'American Express',
+        # Healthcare
+        'JNJ': 'Johnson & Johnson', 'PFE': 'Pfizer', 'MRK': 'Merck',
+        'UNH': 'UnitedHealth', 'ABBV': 'AbbVie', 'LLY': 'Eli Lilly',
+        'TMO': 'Thermo Fisher', 'ABT': 'Abbott', 'AMGN': 'Amgen',
+        # Consumer
+        'KO': 'Coca-Cola', 'PEP': 'PepsiCo', 'WMT': 'Walmart', 'HD': 'Home Depot',
+        'COST': 'Costco', 'NKE': 'Nike', 'MCD': "McDonald's", 'SBUX': 'Starbucks',
+        'PG': 'Procter & Gamble', 'DIS': 'Disney', 'LOW': "Lowe's",
+        # Energy
+        'XOM': 'Exxon Mobil', 'CVX': 'Chevron', 'COP': 'ConocoPhillips',
+        # Industrial
+        'BA': 'Boeing', 'CAT': 'Caterpillar', 'GE': 'GE Aerospace',
+        'HON': 'Honeywell', 'LMT': 'Lockheed Martin', 'UPS': 'UPS',
+    }
+
+    if "US" in universe_type:
+        manual_tickers = tickers_us
+    elif "상위 100" in universe_type:
+        manual_tickers = {**tickers_massive, **additional}
+    else:
+        manual_tickers = tickers_futures
 
     fetch_start = (pd.to_datetime(start_date) - timedelta(days=365)).strftime('%Y-%m-%d')
     fetch_end = pd.to_datetime(end_date).strftime('%Y-%m-%d')
