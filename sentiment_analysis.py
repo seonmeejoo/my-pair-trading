@@ -1,6 +1,7 @@
 import os
 import json
-import feedparser
+import xml.etree.ElementTree as ET
+import requests
 import yfinance as yf
 from openai import OpenAI
 from datetime import datetime
@@ -19,15 +20,23 @@ client = OpenAI()
 def fetch_news(ticker: str, company_name: str, max_items: int = 8) -> list[dict]:
     """Yahoo Finance RSS 피드에서 최신 뉴스 수집"""
     url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
-    feed = feedparser.parse(url)
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    root = ET.fromstring(resp.text)
 
     news_list = []
-    for entry in feed.entries[:max_items]:
+    for item in root.iter("item"):
+        if len(news_list) >= max_items:
+            break
+        title = item.findtext("title", "")
+        description = item.findtext("description", "")[:500]
+        pub_date = item.findtext("pubDate", "")
+        link = item.findtext("link", "")
         news_list.append({
-            "title": entry.get("title", ""),
-            "summary": entry.get("summary", "")[:500],
-            "published": entry.get("published", ""),
-            "link": entry.get("link", "")
+            "title": title,
+            "summary": description,
+            "published": pub_date,
+            "link": link
         })
 
     return news_list

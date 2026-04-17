@@ -9,5 +9,4 @@ requests
 plotly
 pykrx
 yfinance
-feedparser
 openai
